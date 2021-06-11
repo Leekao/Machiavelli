@@ -57,10 +57,15 @@ const get_all_props = (self, obj) => {
   return properties
 }
 
-export default async function ({url, dbName} = {
-  url: 'mongodb://root:iDmNsgNPFR@localhost:27018',
-  dbName: 'test'
-}) {
+export default async function ({
+  _id,
+  database,
+  username,
+  password,
+  host,
+  port,
+}, userId) {
+  const url = `mongodb://${username}:${password}@${host}:${port}/${database}`
   const client = new MongoClient(url,{
     useUnifiedTopology: true
   })
@@ -69,12 +74,13 @@ export default async function ({url, dbName} = {
   const add_to_types = (self, name, props) => {types[get_type_name(name)] = get_all_props(self, props)}
   const db = client.db("test")
   const names = (await db.listCollections().toArray()).map(c => c.name)
-  const promises = names.map(async (n) => {
+  await promise.all(names.map(async (n) => {
     const d = await db.collection(n).findOne()
     if (!d) return
     add_to_types(add_to_types,n,d)
   })
-  await Promise.all(promises)
+  )
+  return types
   await construct_schema(types)
 }
 

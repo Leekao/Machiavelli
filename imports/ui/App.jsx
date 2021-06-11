@@ -2,8 +2,8 @@ import React from 'react';
 import { InMemoryCache, ApolloProvider, ApolloClient, ApolloLink } from '@apollo/client';
 import { BatchHttpLink } from '@apollo/client/link/batch-http'
 // import { MeteorAccountsLink } from 'meteor/apollo'
-import { Hello } from './Hello.jsx';
-import { Info } from './Info.jsx';
+import { TypesViewer } from './TypesViewer.jsx';
+import { DataSources } from './DataSources.jsx';
 
 const cache = new InMemoryCache().restore(window.__APOLLO_STATE__);
 
@@ -23,9 +23,9 @@ const client = new ApolloClient({
 export const App = () => (
   <ApolloProvider client={client}>
     <div>
-      <h1>Welcome to Meteor! ☄</h1>
-      <Hello/>
-      <Info/>
+      <DataSources/>
+      <hr></hr>
+      <TypesViewer/>
     </div>
   </ApolloProvider>
 );

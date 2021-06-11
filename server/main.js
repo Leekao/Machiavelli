@@ -3,20 +3,29 @@ import { LinksCollection, GamesCollection, Databases,Types } from '/imports/api/
 import './apollo'
 import Analyzers from './analyzers'
 
+
 function insertLink({ title, url }) {
   LinksCollection.insert({title, url, createdAt: new Date()});
 }
 
 Meteor.methods({
-  "analyze": function({db_id}) {
-    const db = Databases.findOne({_id: db_id})
-    Analyzers.pg(db, this.userId)
+  "analyze": function(db_id) {
+    const db = Databases.findOne(db_id)
+    console.log({db})
+    if (Analyzers[db.type]) {
+      try {
+        Analyzers[db.type](db, this.userId)
+      } catch(e) {
+        console.log(e)
+      }
+    }
   }
 })
+//export MONGO_URL="mongodb://root:z2ctzAF9W0@localhost:27017/admin"
 
 Meteor.startup(() => {
   // If the Links collection is empty, add some data.
-  Databases.remove({})
+  console.log(Types.find().fetch()[2])
   if (Databases.find().count() === 0) {
     Databases.insert({
       name: 'localhost pg',
@@ -25,16 +34,16 @@ Meteor.startup(() => {
       username: 'postgres',
       password: "z2ZBTy7jNM",
       host: '127.0.0.1',
-      port: 5435,
+      port: 5432,
     })
     Databases.insert({
       name: 'localhost mongodb',
-      type: 'mongodb',
+      type: 'mdb',
       database: 'test',
       username: 'root',
-      password: 'z2ctzAF9W0',
+      password: 'iDmNsgNPFR',
       host: 'localhost',
-      port: 27017,
+      port: 27018,
     })
   }
   GamesCollection.remove({})

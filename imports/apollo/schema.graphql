@@ -1,10 +1,29 @@
-type Link {
+type Field {
     _id: ID!
-    title: String
-    url: String
+    name: String
+    type: String
+    udt_name: String
+    is_nullable: Boolean
+    gql_type: String
+}
+
+type Type {
+    _id: ID!
+    db: Database
+    basedOnTable: String,
+    typeName: String,
+    fields: [Field]
+}
+
+type Database {
+    _id: ID!
+    name: String
+    host: String
 }
 
 type Query {
-    getLink (id: ID!): Link
-    getLinks: [Link]
+    getDb (id: ID!): Database
+    getDbs: [Database]
+    getType (id: ID!): Type
+    getTypes: [Type]
 }

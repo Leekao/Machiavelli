@@ -1,13 +1,15 @@
 import { ApolloServer } from 'apollo-server-express';
 import { WebApp } from 'meteor/webapp';
 import { getUser } from 'meteor/apollo';
-import { LinksCollection } from '/imports/api/links';
+import { Databases,Types } from '/imports/api/links';
 import typeDefs from '/imports/apollo/schema.graphql';
 
 const resolvers = {
   Query: {
-    getLink: (obj, { id }) => LinksCollection.findOne(id),
-    getLinks: () => LinksCollection.find().fetch()
+    getType: (obj, { id }) => Types.findOne(id),
+    getTypes: () => Types.find().fetch(),
+    getDb: (obj, { id }) => Databases.findOne(id),
+    getDbs: () => Databases.find().fetch()
   }
 };
 

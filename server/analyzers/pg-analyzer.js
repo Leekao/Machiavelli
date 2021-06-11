@@ -51,34 +51,41 @@ const get_table = (table, db) => {
 const psql_to_gql = (types_obj) => {
   for (let type_name in types_obj){
     for (field in types_obj[type_name]) {
-      const {type, value} = types_obj[type_name][field].type
+      const {type, value, udt_name, is_nullable} = types_obj[type_name][field]
+      let gql_type = ''
       switch (type) {
         case "integer":
-          types_obj[type_name][field] = "Int"
+          gql_type = "Int"
           break
         case "boolean":
-          types_obj[type_name][field] = "Boolean"
+          gql_type = "Boolean"
           break
         case "character varying":
-          types_obj[type_name][field] = "String"
+          gql_type = "String"
           break
-        case "boolean":
-          types_obj[type_name][field] = "Boolean"
+        case "ARRAY":
+          if (udt_name==='_int4') gql_type = "[Int]"
           break
-        case "index":
-          types_obj[type_name][field] = value
+        case "timestamp":
+          gql_type = "DATETIME"
+          break
+        case "INDEX":
+          gql_type = value
           break
         case "ID":
-          types_obj[type_name][field] = "ID"
+          gql_type = "ID!"
           break
       }
+      if (is_nullable==='YES') gql_type+="?"
+      types_obj[type_name][field].gql_type = gql_type
     }
   }
   return types_obj
 }
-export default async ({user, password, host, port, database},userId) => {
+
+export default async ({_id, username, password, host, port, database},userId) => {
   const types = {}
-  const client = new Client({ user, password, host, database, port })
+  const client = new Client({ user: username, password, host, database, port })
   await client.connect()
   const {rows: db_rows} = await client.query(get_dbs_query)
   await Promise.all(db_rows.map(async ({datname: db_name}) => {
@@ -86,25 +93,46 @@ export default async ({user, password, host, port, database},userId) => {
     await Promise.all(tables.map(async ({table_name})=> {
       types[table_name] = {}
       const {rows: rows} = await client.query(get_table(table_name,db_name))
-      await Promise.all(rows.map(async ({column_name, data_type, ...rest})=> {
-        console.log({rest})
-        types[table_name][column_name] = { type: data_type }
+      await Promise.all(rows.map(async ({column_name, data_type: type, is_nullable,udt_name})=> {
+        // get every row type
+        types[table_name][column_name] = { type, is_nullable, udt_name }
       }))
       const {rows: indexs} = await client.query(get_indexs(table_name,db_name))
       await Promise.all(indexs.map(async ({indisprimary, attname})=> {
+        // if primary index label as ID
         if (indisprimary) types[table_name][attname].type = 'ID'
       }))
       const {rows: fkeys} = await client.query(get_fkeys(table_name))
       await Promise.all(fkeys.map(async ({column_name, foreign_table_name})=> {
+        // if foreign key label as such
         types[table_name][column_name] = {
-          type: 'index',
+          type: 'INDEX',
           value: foreign_table_name
         }
       }))
     }))
   }))
   const gql_types = psql_to_gql(types)
-  console.log(types, gql_types)
+  for (let table_name in gql_types) {
+    let fields = []
+    for (let f of Object.keys(gql_types[table_name])) {
+      fields.push({ name:f, ...gql_types[table_name][f] })
+    }
+    Types.upsert(
+      {
+        db: _id,
+        basedOnTable: table_name
+      },
+      {
+        $set: {
+          db: _id,
+          basedOnTable: table_name,
+          typeName: table_name,
+          fields
+        }
+      }
+    )
+  }
   await client.end()
   return gql_types
 }
