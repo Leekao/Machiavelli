@@ -1,11 +1,6 @@
-const MongoClient = require('mongodb').MongoClient
-const fs = require('fs')
+//const MongoClient = require('mongodb').MongoClient
+//const fs = require('fs')
 
-const url = 'mongodb://root:z2ctzAF9W0@localhost:27017'
-const dbName = 'test'
-const client = new MongoClient(url,{
-  useUnifiedTopology: true
-})
 const get_type_name = (collection_name) => {
   let type = ''
   if (collection_name.charAt(collection_name.length-1) === "s") {
@@ -62,7 +57,13 @@ const get_all_props = (self, obj) => {
   return properties
 }
 
-async function runner() {
+export default async function ({url, dbName} = {
+  url: 'mongodb://root:iDmNsgNPFR@localhost:27018',
+  dbName: 'test'
+}) {
+  const client = new MongoClient(url,{
+    useUnifiedTopology: true
+  })
   await client.connect()
   const types = []
   const add_to_types = (self, name, props) => {types[get_type_name(name)] = get_all_props(self, props)}
@@ -94,5 +95,3 @@ const construct_schema = async (types) => {
   ws.write(`}`)
   ws.close()
 }
-
-runner()
