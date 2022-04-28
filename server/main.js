@@ -11,7 +11,6 @@ function insertLink({ title, url }) {
 Meteor.methods({
   "analyze": function(db_id) {
     const db = Databases.findOne(db_id)
-    console.log({db})
     if (Analyzers[db.type]) {
       try {
         Analyzers[db.type](db, this.userId)
@@ -25,25 +24,16 @@ Meteor.methods({
 
 Meteor.startup(() => {
   // If the Links collection is empty, add some data.
-  console.log(Types.find().fetch()[2])
+  Types.remove({})
   if (Databases.find().count() === 0) {
     Databases.insert({
-      name: 'localhost pg',
-      type: 'pg',
+      name: 'localhost mysql',
+      type: 'mysql',
       database: '',
-      username: 'postgres',
-      password: "z2ZBTy7jNM",
-      host: '127.0.0.1',
-      port: 5432,
-    })
-    Databases.insert({
-      name: 'localhost mongodb',
-      type: 'mdb',
-      database: 'test',
       username: 'root',
-      password: 'iDmNsgNPFR',
+      password: 'college',
       host: 'localhost',
-      port: 27018,
+      port: 3306,
     })
   }
   GamesCollection.remove({})

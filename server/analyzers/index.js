@@ -1,3 +1,4 @@
 import mdb from './mdb-analyzer'
 import pg from './pg-analyzer'
-export default {pg, mdb}
+import mysql from './mysql-analyzer'
+export default {pg, mdb, mysql}

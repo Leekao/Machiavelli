@@ -2,3 +2,56 @@ body {
   padding: 10px;
   font-family: sans-serif;
 }
+
+.QueryViewer >ul {
+	padding-left: 10px;
+	margin: 5px;
+}
+.QueryViewer >h4 {
+	margin: 5px;
+}
+
+.CodeViewer {
+  flex-grow: 1;
+	padding: 10px;
+	font-size: 14px;
+}
+
+.CodeViewer >ul {
+	margin: 5px;
+	padding-left: 10px;
+}
+
+.isType {
+	font-weight: bold;
+}
+
+.QueryViewer {
+  flex-grow: 0.1;
+	padding: 10px;
+	border-left: solid black 1.5px;
+}
+
+.TypeViewer {
+  flex-grow: 0.1;
+	border-right: solid black 1.5px;
+}
+
+.TypeViewer > ul > div > ul {
+	padding-left: 15px;
+}
+
+.TypeViewer >ul {
+	padding-left: 10px;
+	margin: 5px;
+	padding: 5px;
+}
+.TypeViewer >ul>div>h4 {
+	margin: 5px;
+}
+
+.fg1 {
+}
+.flex_container {
+  display: flex;
+}

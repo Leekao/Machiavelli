@@ -7,12 +7,23 @@ type Field {
     gql_type: String
 }
 
+union TypeOrEnum = Type | EnumType
+
+type EnumType {
+    _id: ID!
+    db: Database
+    basedOnTable: String
+    typeName: String
+    fields: [String]
+}
+
 type Type {
     _id: ID!
     db: Database
-    basedOnTable: String,
-    typeName: String,
+    basedOnTable: String
+    typeName: String
     fields: [Field]
+		index: [String]
 }
 
 type Database {

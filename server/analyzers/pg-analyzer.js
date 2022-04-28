@@ -70,17 +70,24 @@ const psql_to_gql = (types_obj) => {
           gql_type = "DATETIME"
           break
         case "INDEX":
-          gql_type = value
+          gql_type = `_${value}`
           break
         case "ID":
           gql_type = "ID!"
           break
       }
-      if (is_nullable==='YES') gql_type+="?"
+      //if (is_nullable==='NO') gql_type+="!"
       types_obj[type_name][field].gql_type = gql_type
     }
   }
   return types_obj
+}
+
+const to_type = (str) => {
+  const str_len = str.endsWith('s') 
+  ? str.length - 2
+  : str.length - 1
+  return str.charAt(0).toUpperCase() + str.substr(1,str_len)
 }
 
 export default async ({_id, username, password, host, port, database},userId) => {
@@ -91,7 +98,10 @@ export default async ({_id, username, password, host, port, database},userId) =>
   await Promise.all(db_rows.map(async ({datname: db_name}) => {
     const {rows: tables} = await client.query(get_all_tables(db_name))
     await Promise.all(tables.map(async ({table_name})=> {
-      types[table_name] = {}
+      types[table_name] = {
+        basedOnTable: table_name,
+        typeName: to_type(table_name)
+      }
       const {rows: rows} = await client.query(get_table(table_name,db_name))
       await Promise.all(rows.map(async ({column_name, data_type: type, is_nullable,udt_name})=> {
         // get every row type
@@ -100,22 +110,27 @@ export default async ({_id, username, password, host, port, database},userId) =>
       const {rows: indexs} = await client.query(get_indexs(table_name,db_name))
       await Promise.all(indexs.map(async ({indisprimary, attname})=> {
         // if primary index label as ID
-        if (indisprimary) types[table_name][attname].type = 'ID'
+        if (indisprimary) {
+					types[table_name][attname].type = 'ID'
+					types[table_name].index = attname
+				}
       }))
       const {rows: fkeys} = await client.query(get_fkeys(table_name))
       await Promise.all(fkeys.map(async ({column_name, foreign_table_name})=> {
         // if foreign key label as such
+        console.log({foreign_table_name}, to_type(foreign_table_name))
         types[table_name][column_name] = {
           type: 'INDEX',
-          value: foreign_table_name
+          value: to_type(foreign_table_name)
         }
       }))
     }))
   }))
   const gql_types = psql_to_gql(types)
   for (let table_name in gql_types) {
+    const { typeName, basedOnTable, index, ...x} = gql_types[table_name]
     let fields = []
-    for (let f of Object.keys(gql_types[table_name])) {
+    for (let f of Object.keys(x)) {
       fields.push({ name:f, ...gql_types[table_name][f] })
     }
     Types.upsert(
@@ -126,8 +141,9 @@ export default async ({_id, username, password, host, port, database},userId) =>
       {
         $set: {
           db: _id,
-          basedOnTable: table_name,
-          typeName: table_name,
+					index,
+          basedOnTable,
+          typeName,
           fields
         }
       }
